@@ -51,23 +51,35 @@ import net.minecraftforge.jver.util.ProcessUtils;
  * <p>
  * Folder format is fairly straight forward, the package filename is the archive name from
  * 'package info' the api returns. I could use the package ID to get unique names, however
- * I thought using the filename was unique enough and provided more human readable names.
+ * I thought using the filename was unique enough and provided more human-readable names.
  * <p>
  *
  * TODO: [DISCO][Threads] Locking files for multiple processes accessing the same cache directory
  * TODO: [DISCO][Log] Proper logging API instead of System.out?
  */
 public class Disco {
+    private static final String DEFAULT_PROVIDER = "https://api.foojay.io/disco/v3.0";
     private static final int CACHE_TIMEOUT = 1000 * 60 * 60 * 12; // 12 hours
     private static final Gson GSON = DownloadUtils.GSON;
 
     private final File cache;
     private final String provider;
 
+    /**
+     * Makes a new Disco downloader client with the default API provider.
+     *
+     * @param cache The JDK cache directory
+     */
     public Disco(File cache) {
-        this(cache, "https://api.foojay.io/disco/v3.0");
+        this(cache, DEFAULT_PROVIDER);
     }
 
+    /**
+     * Makes a new Disco downloader client with a custom provider.
+     *
+     * @param cache    The JDK cache directory
+     * @param provider The disco API provider
+     */
     public Disco(File cache, String provider) {
         this.cache = cache;
         this.provider = provider;
@@ -81,6 +93,14 @@ public class Disco {
         System.out.println(message);
     }
 
+    /**
+     * Gets the entire list of packages available from the provider.
+     *
+     * @return List of packages
+     *
+     * @see #getPackages(int)
+     * @see #getPackages(int, OS, Distro, Arch)
+     */
     public List<Package> getPackages() {
         File tmp = new File(cache, "packages.json");
         List<Package> ret = readJson(tmp, new TypeToken<List<Package>>(){});
@@ -110,10 +130,25 @@ public class Disco {
         return resp.entries();
     }
 
+    /**
+     * Gets the list of packages for a specific version.
+     *
+     * @param version The version of JDK
+     * @return List of packages
+     */
     public List<Package> getPackages(int version) {
         return getPackages(version, OS.CURRENT, Distro.TEMURIN, Arch.CURRENT);
     }
 
+    /**
+     * Gets the list of packages for a specific version, {@link OS}, {@link Distro}, and {@link Arch}.
+     *
+     * @param version The version of JDK
+     * @param os      The operating system
+     * @param distro  The JDK distribution
+     * @param arch    The architecture
+     * @return List of packages
+     */
     public List<Package> getPackages(int version, OS os, Distro distro, Arch arch) {
         List<Package> jdks = getPackages();
         if (jdks == null)
@@ -156,6 +191,12 @@ public class Disco {
         return ret;
     }
 
+    /**
+     * Gets the info of a specific package.
+     *
+     * @param pkg The package
+     * @return The package info
+     */
     public PackageInfo getInfo(Package pkg) {
         File tmp = new File(cache, pkg.filename + ".json");
         DownloadInfo ret = readJson(tmp, TypeToken.get(DownloadInfo.class));

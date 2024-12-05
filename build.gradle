@@ -88,9 +88,9 @@ compileJava {
     options.encoding = 'UTF-8'
 }
 
-changelog {
-    from '1.0'
-}
+//changelog {
+//    from '1.0'
+//}
 
 artifacts {
     //archives javaProbeJar
